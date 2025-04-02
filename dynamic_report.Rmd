@@ -1,0 +1,97 @@
+---
+title: My dynamic report
+output: html_fragment
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE, error=FALSE)
+
+```
+
+```{css}
+
+```
+
+## What's going on with this data?
+
+This data set represents my observations from my daily bus commute. I take the bus for different reasons, so I decided to use that as the categorical data and the number of people I count on the bus right before I get off as the numerical data.
+
+The reasons for my travel would be for
+
+- Work
+- University
+- To meet friends
+- Errands
+
+```{r}
+library(tidyverse)
+
+#extracting data from the csv into R, then renaming the variables
+logged_data <- read_csv('https://docs.google.com/spreadsheets/d/e/2PACX-1vTAF02Kzxd-nCZkoXWRuIFRNhh4TRCilwqDG5uiijEXBQpJGMS5hML1fi8MTTm5HYesBJP0kTYUbE8T/pub?output=csv') %>%
+  rename(time = 1,
+         count = 2,
+         reason = 3)
+
+#mean number of people on the bus over 20 days
+mean_people <- ceiling(mean(logged_data$count))
+
+#filtering for university entries
+university <- logged_data %>%
+  filter(reason == "University")
+
+#filtering for everything else but uni entries
+other <- logged_data %>%
+  filter(reason != "University")
+
+#mean number of people on the bus ride to university - peak travel mean
+university_mean <- ceiling(mean(university$count))
+
+#mean number of people on the bus ride during other occasions - off peak travel mean
+other_mean <- ceiling(mean(other$count))
+
+
+#bar chart for the total number of people who took the bus during each reason
+reason_plot <- ggplot(data = logged_data) +
+      geom_bar(aes(x = reason,),
+               fill = "#70006c",) + 
+      labs(title = "Total number of people on buses",
+          subtitle = "Comparing the number of people that took the bus during different reasons of transport",
+          caption = "Source: Google sheets",
+          x = "Reason of travel",
+          y = "Total number of people that took the bus")
+
+#dataframe for the count of reason
+reason_counts <- logged_data %>%
+  count(reason)
+
+#making a data frame that shows the frequency of each travel reason
+reason_data <- data.frame(reason_counts)
+colnames(reason_data) <- c("reason", "count")
+
+#bar chart for the frequency count of each travel reason
+frequency_plot <- ggplot(reason_data, aes(x = count, y = reason)) +
+    geom_bar(stat = "identity", fill = "#70006c") +
+    labs(title = "Frequency of Each Travel Reason",
+         subtitle = "Number of times each travel reason appears",
+         caption = "Source: Google Sheets",
+         x = "Reason for Travel",
+         y = "Frequency")
+
+#I have decided to use mean_people, university_mean and other_mean as the summary values
+#reason_plot and frequency_plot will be used as the two bar charts
+
+```
+The average number of people who take the bus overall is `r mean_people` people.
+The average number of people who take the bus during peak hours and offpeak hours are `r university_mean` and `r other_mean` respectively.
+
+### Bar chart representing the total number of people who take the bus during different travel reasons
+```{r fig.cap = "Reason chart", echo = FALSE}
+reason_plot
+```
+
+### Bar chart representing the different total number of times I travelled for different reasons
+```{r fig.cap = "Frequency chart", echo = FALSE}
+frequency_plot
+```
+
+
